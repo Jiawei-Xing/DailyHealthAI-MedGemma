@@ -55,8 +55,7 @@ const CounselorView: React.FC = () => {
   const handleGenerateJournal = async () => {
     if (chatHistory.length < 2) return;
     setGeneratingJournal(true);
-    const historyText = chatHistory.map(c => `${c.sender}: ${c.text}`).join('
-');
+    const historyText = chatHistory.map(c => `${c.sender}: ${c.text}`).join('\n');
     const result = await generateJournalEntry(historyText);
     setJournal(result);
     setGeneratingJournal(false);

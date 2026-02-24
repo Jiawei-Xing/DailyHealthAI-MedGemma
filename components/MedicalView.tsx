@@ -47,11 +47,7 @@ const MedicalView: React.FC = () => {
   const appendToProfile = () => {
     if (answer) {
         // Append full result without truncation for better history tracking
-        const newHistory = profile.medicalHistory + "
-
---- MEDICAL RESULT (" + new Date().toLocaleDateString() + ") ---
-" + answer + "
------------------------------------";
+        const newHistory = `${profile.medicalHistory}\n\n--- MEDICAL RESULT (${new Date().toLocaleDateString()}) ---\n${answer}\n-----------------------------------`;
         updateProfile({ medicalHistory: newHistory });
         setProfileUpdated(true);
     }

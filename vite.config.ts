@@ -8,11 +8,23 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        proxy: {
+          '/api/medgemma': {
+            target: 'https://nonprofessed-marleigh-tachygraphically.ngrok-free.dev',
+            changeOrigin: true,
+            secure: false,
+            headers: {
+              'ngrok-skip-browser-warning': 'true'
+            },
+            rewrite: (path) => path.replace(/^\/api\/medgemma/, '')
+          }
+        }
       },
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.MEDGEMMA_API_URL': JSON.stringify(env.MEDGEMMA_API_URL)
       },
       resolve: {
         alias: {

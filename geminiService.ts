@@ -157,8 +157,8 @@ export const generateJournalEntry = async (chatHistory: string): Promise<string>
 };
 
 // --- Medical Agent (Updated for Kaggle Challenge) ---
-// This agent can now point to a custom hosted MedGemma endpoint (Vertex AI, Kaggle, or Local)
-const MEDGEMMA_ENDPOINT = process.env.MEDGEMMA_API_URL || null;
+// Use the local proxy defined in vite.config.ts to avoid SSL issues.
+const MEDGEMMA_ENDPOINT = "/api/medgemma/generate";
 
 export const consultMedicalAgent = async (profile: UserProfile, question: string): Promise<string> => {
   try {
@@ -166,19 +166,28 @@ export const consultMedicalAgent = async (profile: UserProfile, question: string
     if (MEDGEMMA_ENDPOINT) {
       const response = await fetch(MEDGEMMA_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({
-          prompt: `User Context: ${profile.medicalHistory}. Question: ${question}`,
+          prompt: `You are MedGemma, a specialized clinical AI assistant.
+            User Medical Context: ${profile.medicalHistory}
+            Genetic Risks: ${profile.geneticRisks}
+            Question: ${question}
+
+            Provide a concise, evidence-based clinical response.`,
           model: "med-gemma"
         })
       });
       const data = await response.json();
-      return data.response || data.text || "No response from MedGemma.";
+      // Handle various common response formats from custom endpoints
+      return data.response || data.text || data.generated_text || "No response from MedGemma.";
     }
 
     // Fallback/Default using Gemini 1.5 Pro (Useful for UI development)
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-pro', 
+      model: 'gemini-3.1-pro-preview', 
       contents: `
         [SYSTEM: YOU ARE ACTING AS THE MEDGEMMA SPECIALIST AGENT]
         User Context: 
@@ -194,7 +203,10 @@ export const consultMedicalAgent = async (profile: UserProfile, question: string
     });
     return response.text || "Unable to consult at this time.";
   } catch (error) {
-    console.error("Medical Agent Error:", error);
+    console.error("Medical Agent Error Detail:", error);
+    if (error instanceof Error) {
+        return `The medical model is currently offline. Error: ${error.message}. Please check your endpoint configuration and ensure the ngrok tunnel is active.`;
+    }
     return "The medical model is currently offline. Please check your endpoint configuration.";
   }
 };
@@ -203,7 +215,7 @@ export const analyzeMedicalResult = async (base64Image: string): Promise<string>
     try {
       // In a real Kaggle submission, you would send this to a multimodal MedGemma endpoint
       const response = await ai.models.generateContent({
-        model: 'gemini-1.5-pro', // Using Pro for vision capabilities until MedGemma endpoint is live
+        model: 'gemini-3.1-pro-preview', // Using Pro for vision capabilities until MedGemma endpoint is live
         contents: {
           parts: [
             { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
@@ -224,10 +236,10 @@ export const synthesizeDailyReport = async (state: AppState): Promise<string> =>
     // Summarize recent history for context
     const recentHistory = state.history.slice(0, 3).map(h => 
         `- ${h.date}: ${h.mood || 'Neutral'} (${h.caloriesIn - h.caloriesBurned} net kcal)
-  Details: ${h.details || 'No details'}`
-    ).join('
-');
+        Details: ${h.details || 'No details'}`
+      ).join('\n');
 
+      
     const today = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     const prompt = `
