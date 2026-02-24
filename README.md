@@ -3,7 +3,10 @@
 </div>
 
 # DailyHealth AI MedGemma
-This project is a fork of DailyHealth AI, specialized with **MedGemma** for advanced medical agent reasoning.
+This project is a fork of DailyHealth AI, specialized with **MedGemma** for advanced medical agent reasoning. Specifically, the medical agent ingests complex medical documents (like test results) to update the user's risk profile and answers clinical questions, leveraging the specialized medical knowledge of MedGemma.
+<div align="center">
+<img width="250" alt="MedGemma" src="img/MedGemma.png" />
+</div>
 
 # Problem
 The goal of this project is to provide access to personalized health coaching. While modern technology offers endless lifestyle choices, it also contributes to widespread health crises, including poor nutrition, sedentary behavior, and chronic stress. While we visit doctors for acute illnesses, the majority of health outcomes are determined by daily decisions—what we eat, how we move, how we sleep, and how we manage emotion. Furthermore, generic health advice fails to account for individual medical histories and genetic backgrounds. There is a critical need for a system that bridges the gap between clinical medical records and daily lifestyle choices to prevent disease, reduce medical burdens, and improve overall quality of life.
@@ -22,6 +25,15 @@ The project implements key concepts of AI agents:
 
 # Set up
 
+### Run app in Google AI Studio:
+https://ai.studio/apps/drive/1cKOVrcPRArWwCj1XXFs6Tg1zYPtsh3p7?fullscreenApplet=true
+
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
+
+However, this does not support MedGemma and instead uses Gemini 3.1 pro for the medical agent. To use MedGemma, deploy it locally or on Google Cloud and provide the link as below. 
+
 ### Run Locally:
 
 **Prerequisites:**  Node.js
@@ -29,19 +41,69 @@ The project implements key concepts of AI agents:
 1. Install dependencies:
    `npm install`
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+3. Set the `MEDGEMMA_API_URL` in [.env.local](.env.local) to your MedGemma API link
+4. Run the app:
    `npm run dev`
 
 # Instruction
 
-### Medical Specialist (MedGemma)
-This agent ingests complex medical documents (like test results) to update the user's risk profile and answers clinical questions, leveraging the specialized medical knowledge of MedGemma.
+### Demo in YouTube video: 
+https://www.youtube.com/shorts/yDilStyoBCM
+
+### Demo in images:
+
+**Authentication & Privacy:** Secure login ensures sensitive health data remains private.
+<div align="center">
+<img width="250" alt="Login" src="img/Login.png" />
+</div>
+
+**Onboarding:** The system establishes a baseline by capturing demographics and goals, which initiates the long-term memory context.
+<div align="center">
+<img width="250" alt="Background1" src="img/Background1.png" />
+<img width="250" alt="Background2" src="img/Background2.png" />
+<img width="250" alt="Background3" src="img/Background3.png" />
+</div>
+
+**Dietitian Agent:** Utilizing Gemini’s vision capabilities, this agent analyzes food photos to extract calories and macros, updating the user’s nutritional profile instantly.
+<div align="center">
+<img width="250" alt="Dietitian" src="img/Dietitian.png" />
+</div>
+
+**Trainer Agent:** This agent designs bespoke workouts based on real-time variables (energy levels, time constraints) and cross-references them with medical safety protocols.
+<div align="center">
+<img width="250" alt="Trainer" src="img/Trainer.png" />
+</div>
+
+**Sleep Specialist:** Beyond tracking duration, this agent performs qualitative analysis, including Jungian dream interpretation.
+<div align="center">
+<img width="250" alt="Sleep" src="img/Sleep.png" />
+</div>
+
+**Counselor Agent:** A dedicated mental health support interface that tracks emotional valence and provides empathetic dialogue.
+<div align="center">
+<img width="250" alt="Counselor" src="img/Counselor.png" />
+   <img width="250" alt="Counselor" src="img/Counselor2.png" />
+</div>
+
+**Medical Specialist:** This agent ingests complex medical documents (like test results) to update the user's risk profile and answers clinical questions.
 <div align="center">
 <img width="250" alt="Medical" src="img/Medical.png" />
+</div>
+
+**The Consensus Meeting:** The core feature where the Coordinator Agent leads a synthesis of all data streams, producing a strategic executive summary.
+<div align="center">
+<img width="250" alt="Meeting1" src="img/Meeting1.png" />
+<img width="250" alt="Meeting2" src="img/Meeting2.png" />
+</div>
+
+**Archival Memory:** Daily summaries are compressed and archived, allowing the system to detect long-term trends.
+<div align="center">
+<img width="250" alt="Profile" src="img/Profile.png" />
+<img width="250" alt="Record" src="img/Record.png" />
 </div>
 
 # Future work
 * Tool Integration: Currently, the agents rely on LLM knowledge. I would integrate Model Context Protocol (MCP) to connect specialized tools to increase accuracy, such as Apple Health for biometric data, Apple Fitness for exercises, and Cal AI for exact calorie counting.
 * Agent-to-Agent (A2A) Protocol: I would implement a chat loop where agents can debate. For example, the Trainer could propose a workout, and the Medical Agent could veto it based on a new symptom, requiring the Trainer to regenerate the plan before presenting it to the user.
 * Evaluation Framework: I would implement automated eval sets to ensure that advice remains medically safe and consistent with the user's history over long periods.
-* Privacy & Compliance: Given the sensitivity of medical data, I would implement HIPAA-compliant encryption and local-first data storage options.
+* Multimodal inputs: Standard medgemma-1.5-4b-it is a text-in/text-out model. To process images on Kaggle, I use a separate vision model in the pipeline to extract the text from the medical document before passing it to MedGemma. However, a multimodal medical variant could be used.
