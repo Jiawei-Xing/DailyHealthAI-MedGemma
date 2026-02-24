@@ -8,17 +8,7 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
-        proxy: {
-          '/api/medgemma': {
-            target: 'https://nonprofessed-marleigh-tachygraphically.ngrok-free.dev',
-            changeOrigin: true,
-            secure: false,
-            headers: {
-              'ngrok-skip-browser-warning': 'true'
-            },
-            rewrite: (path) => path.replace(/^\/api\/medgemma/, '')
-          }
-        }
+        // The proxy block has been completely removed!
       },
       plugins: [react()],
       define: {

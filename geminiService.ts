@@ -157,35 +157,32 @@ export const generateJournalEntry = async (chatHistory: string): Promise<string>
 };
 
 // --- Medical Agent (Updated for Kaggle Challenge) ---
-// Use the local proxy defined in vite.config.ts to avoid SSL issues.
-const MEDGEMMA_ENDPOINT = "/api/medgemma/generate";
+const MEDGEMMA_ENDPOINT = process.env.MEDGEMMA_API_URL || '';
 
 export const consultMedicalAgent = async (profile: UserProfile, question: string): Promise<string> => {
   try {
-    // If a custom MedGemma endpoint is provided, use it. Otherwise, use Gemini 1.5 Pro as a proxy.
     if (MEDGEMMA_ENDPOINT) {
       const response = await fetch(MEDGEMMA_ENDPOINT, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
+          'Bypass-Tunnel-Reminder': 'true' // <-- Localtunnel's specific bypass header
         },
         body: JSON.stringify({
-          prompt: `You are MedGemma, a specialized clinical AI assistant.
-            User Medical Context: ${profile.medicalHistory}
-            Genetic Risks: ${profile.geneticRisks}
-            Question: ${question}
-
-            Provide a concise, evidence-based clinical response.`,
-          model: "med-gemma"
+          profile: profile,
+          question: question
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+
       const data = await response.json();
-      // Handle various common response formats from custom endpoints
-      return data.response || data.text || data.generated_text || "No response from MedGemma.";
+      return data.answer || "No response from MedGemma.";
     }
 
-    // Fallback/Default using Gemini 1.5 Pro (Useful for UI development)
+    // Fallback/Default using Gemini 3.1 Pro (Useful for UI development)
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-pro-preview', 
       contents: `
@@ -212,23 +209,64 @@ export const consultMedicalAgent = async (profile: UserProfile, question: string
 };
 
 export const analyzeMedicalResult = async (base64Image: string): Promise<string> => {
-    try {
-      // In a real Kaggle submission, you would send this to a multimodal MedGemma endpoint
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview', // Using Pro for vision capabilities until MedGemma endpoint is live
+  try {
+    if (MEDGEMMA_ENDPOINT) {
+      // Step 1: Use Gemini 3.1 Pro purely as an OCR tool to read the image
+      const visionResponse = await ai.models.generateContent({
+        model: 'gemini-3.1-pro-preview',
         contents: {
           parts: [
             { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
-            { text: "Analyze this medical document. Provide a clinical summary of key findings." }
+            { text: "Transcribe all the text from this medical document accurately. Do not analyze it, just extract the text." }
           ]
         }
       });
-      return response.text || "Could not analyze the document.";
-    } catch (error) {
-      console.error("Medical Analysis Error:", error);
-      return "Error analyzing medical document.";
+      const extractedText = visionResponse.text || "No legible text found in document.";
+
+      // Step 2: Send the transcribed text to your text-only MedGemma Kaggle server
+      // We reuse the existing /generate endpoint and pass a basic profile
+      const response = await fetch(MEDGEMMA_ENDPOINT, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Bypass-Tunnel-Reminder': 'true' 
+        },
+        body: JSON.stringify({
+          profile: { 
+            age: "Unknown", 
+            gender: "Unknown", 
+            medicalHistory: "N/A", 
+            geneticRisks: "N/A", 
+            goals: [] 
+          }, 
+          question: `Analyze the following transcribed medical document and provide a clinical summary of key findings:\n\n${extractedText}`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.answer || "No response from MedGemma.";
     }
-  };
+
+    // Fallback/Default using Gemini 3.1 Pro for the entire process if MedGemma is offline
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview', 
+      contents: {
+        parts: [
+          { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
+          { text: "Analyze this medical document. Provide a clinical summary of key findings." }
+        ]
+      }
+    });
+    return response.text || "Could not analyze the document.";
+  } catch (error) {
+    console.error("Medical Analysis Error:", error);
+    return "Error analyzing medical document. Please check your backend connection.";
+  }
+};
 
 // --- The Coordinator (Agent Meeting) ---
 export const synthesizeDailyReport = async (state: AppState): Promise<string> => {
