@@ -156,41 +156,58 @@ export const generateJournalEntry = async (chatHistory: string): Promise<string>
   }
 };
 
-// --- Medical Agent (Updated to use MedGemma) ---
+// --- Medical Agent (Updated for Kaggle Challenge) ---
+// This agent can now point to a custom hosted MedGemma endpoint (Vertex AI, Kaggle, or Local)
+const MEDGEMMA_ENDPOINT = process.env.MEDGEMMA_API_URL || null;
+
 export const consultMedicalAgent = async (profile: UserProfile, question: string): Promise<string> => {
   try {
+    // If a custom MedGemma endpoint is provided, use it. Otherwise, use Gemini 1.5 Pro as a proxy.
+    if (MEDGEMMA_ENDPOINT) {
+      const response = await fetch(MEDGEMMA_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `User Context: ${profile.medicalHistory}. Question: ${question}`,
+          model: "med-gemma"
+        })
+      });
+      const data = await response.json();
+      return data.response || data.text || "No response from MedGemma.";
+    }
+
+    // Fallback/Default using Gemini 1.5 Pro (Useful for UI development)
     const response = await ai.models.generateContent({
-      model: 'med-gemma', // Using MedGemma for specialized medical reasoning
+      model: 'gemini-1.5-pro', 
       contents: `
-        You are an AI Medical Assistant powered by MedGemma. 
+        [SYSTEM: YOU ARE ACTING AS THE MEDGEMMA SPECIALIST AGENT]
         User Context: 
-        - Age: ${profile.age}
-        - Gender: ${profile.gender}
         - Medical History: ${profile.medicalHistory}
         - Genetic Risks: ${profile.geneticRisks}
         - Goals: ${profile.goals.join(', ')}
 
         User Question: ${question}
 
-        Provide a safe, informative, and personalized answer based on their history. 
-        DISCLAIMER: Always start by stating you are an AI and this is not professional medical advice.
+        Provide a safe, clinical-style informative answer. 
+        DISCLAIMER: State you are an AI and this is not professional medical advice.
       `
     });
     return response.text || "Unable to consult at this time.";
   } catch (error) {
     console.error("Medical Agent Error:", error);
-    return "Medical agent is currently unavailable.";
+    return "The medical model is currently offline. Please check your endpoint configuration.";
   }
 };
 
 export const analyzeMedicalResult = async (base64Image: string): Promise<string> => {
     try {
+      // In a real Kaggle submission, you would send this to a multimodal MedGemma endpoint
       const response = await ai.models.generateContent({
-        model: 'med-gemma', // Using MedGemma for complex document analysis
+        model: 'gemini-1.5-pro', // Using Pro for vision capabilities until MedGemma endpoint is live
         contents: {
           parts: [
             { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
-            { text: "Analyze this medical test result or document. Provide a concise, factual summary of the KEY FINDINGS suitable for saving to a medical record. Do not use conversational filler (e.g. 'Here is the analysis', 'The image shows'). Start directly with the clinical facts." }
+            { text: "Analyze this medical document. Provide a clinical summary of key findings." }
           ]
         }
       });
