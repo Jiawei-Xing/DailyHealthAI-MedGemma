@@ -3,7 +3,7 @@
 </div>
 
 # DailyHealth AI MedGemma
-This project is a fork of DailyHealth AI, specialized with **MedGemma** for advanced medical agent reasoning. Specifically, the medical agent ingests complex medical documents (like test results) to update the user's risk profile and answers clinical questions, leveraging the specialized medical knowledge of MedGemma.
+This project is a fork of [DailyHealth AI](https://github.com/Jiawei-Xing/DailyHealthAI), specialized with **MedGemma** for advanced medical agent reasoning. Specifically, the medical agent ingests complex medical documents (like test results) to update the user's risk profile and answers clinical questions, leveraging the specialized medical knowledge of MedGemma.
 <div align="center">
 <img width="250" alt="MedGemma" src="img/MedGemma.png" />
 </div>
