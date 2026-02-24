@@ -1,0 +1,8 @@
+{
+  "name": "DailyHealth AI MedGemma",
+  "description": "Your AI-powered daily health ecosystem. Featuring Dietitian, Trainer, Sleep, Counselor, and MedGemma Medical agents.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
