@@ -69,7 +69,7 @@ const AppShell: React.FC = () => {
       <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
         <div className="flex items-center space-x-2 text-teal-600">
            <Activity size={24} strokeWidth={2.5} />
-           <span className="font-bold text-lg">DailyHealth AI</span>
+           <span className="font-bold text-lg">DailyHealth AI MedGemma</span>
         </div>
         <button onClick={() => setCurrentView('PROFILE')}>
            <div className="w-9 h-9 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-sm border border-teal-200">
@@ -83,7 +83,7 @@ const AppShell: React.FC = () => {
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center space-x-2 text-teal-600">
             <Activity size={28} strokeWidth={2.5} />
-            <span className="text-xl font-bold tracking-tight">DailyHealth AI</span>
+            <span className="text-xl font-bold tracking-tight">DailyHealth AI MedGemma</span>
           </div>
           <p className="text-xs text-slate-400 mt-1">Holistic AI Ecosystem</p>
         </div>
